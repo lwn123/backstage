@@ -8,5 +8,12 @@ export default {
     },
     reqUserList(state,payload){
         state.userList = payload
+    },
+    reqCateList(state,payload){
+        state.catelist = payload
+
+    },
+    reqSpecsList(state,payload){
+        state.speclist = payload
     }
 }

@@ -14,9 +14,9 @@ module.exports = {
       '/api':{
         target:'http://localhost:3000',//你解决谁的跨域问题，把谁的地址放这
         changeOrigin:true,//跨域
-        pathRewrite:{
-            '^/api':'http://localhost:3000'
-        }
+        // pathRewrite:{
+        //     '^/api':'http://localhost:3000'
+        // }
         
 
       }

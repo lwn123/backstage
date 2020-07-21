@@ -185,6 +185,10 @@ export default {
     subInfo(formName) {
       this.$refs[formName].validate(valid => {
         if (valid) {
+          //对角色权限进行数据类型转化
+          this.menuInfo.menus = this.$refs.tree
+              .getCheckedKeys()
+              .join(',')
           //根据isAdd状态去判断执行接口
           if (this.isAdd) {
             //调取添加接口

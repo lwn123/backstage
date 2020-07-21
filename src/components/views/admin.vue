@@ -7,8 +7,8 @@
     <el-table :data="getStateUserList" border style="width: 100%" row-key="id">
       <el-table-column prop="uid" label="用户编号"></el-table-column>
       <el-table-column prop="username" label="用户名称"></el-table-column>
-      <el-table-column prop="roleid" label="所属角色"></el-table-column>
-      <el-table-column prop="menus" label="状态">
+      <el-table-column prop="rolename" label="所属角色"></el-table-column>
+      <el-table-column prop="status" label="状态">
         <template slot-scope="item">
           <el-tag v-if="item.row.status==1" type="success">启动</el-tag>
           <el-tag v-if="item.row.status==2" type="danger">禁用</el-tag>
@@ -21,7 +21,15 @@
         </template>
       </el-table-column>
     </el-table>
-    <el-pagination background layout="prev, pager, next" :total="4" :page-size='size'></el-pagination>
+    <!-- 
+            分页器 
+            background 是否为分页按钮添加背景色
+            layout  组件布局，子组件名用逗号分隔
+            total 总条目数
+            page-size 每页显示条目个数，支持 .sync 修饰符
+            currentPage 改变时会触发 当前页
+        -->
+    <el-pagination background layout="prev, pager, next" :total="count" :page-size='pageInfo.size' @current-change="getPage"></el-pagination>
     <!-- 弹窗 -->
     <el-dialog
       :title="isAdd ? '添加管理员':'编辑信息'"
@@ -64,22 +72,26 @@ import {
   getusercount,
   getuseredit,
   getuserdelete,
-  getuserlogin
 } from "../../util/axios";
 import breadCrumb from "@/components/common/breadCrumb";
 import {mapGetters,mapActions} from 'vuex'
 export default {
   data() {
     return {
+      count:0,//总条目
       isAdd: true, //添加
       dialogIsShow: false, //是否出现弹框
-      size:2,
       formLabelWidth: "100px", //label宽度
       menuInfo: {
-        roleid: "", //角色编号
-        username: "", //用户名称
-        password: "", //密码
-        status: "1"
+        roleid: '', //角色编号
+        username: '', //用户名称
+        password: '', //密码
+        status: '1'
+      },
+      //分页数据
+      pageInfo:{
+        size:2,
+        page:1
       },
       editUid: 0,
       rules: {
@@ -109,14 +121,14 @@ export default {
   mounted() {
     //触发才调取vuex中的菜单列表
     this.getActionRoleList();
-    this.getActionUserList();
+    this.getCount();
   },
   computed: {
     ...mapGetters(["getStateRoleList",'getStateUserList'])
   },
   methods: {
     //获取管理员列表
-    ...mapActions(['getActionUserList','getActionRoleList']),
+    ...mapActions(['getActionRoleList']),
     reset(){
       this.menuInfo = {
         roleid: "", //角色编号
@@ -136,7 +148,7 @@ export default {
     },
     //删除事件
     del(uid) {
-         console.log(uid);
+      //console.log(uid);
       this.$confirm("你确定要删除这条数据吗", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -147,7 +159,7 @@ export default {
           getuserdelete({ uid }).then(res => {
             if (res.data.code == 200) {
               //重新调取接口列表
-              this.getActionUserList();
+              this.getCount();
               this.$message.success(res.data.msg);
             } else {
               this.$message.error(res.data.msg);
@@ -162,7 +174,7 @@ export default {
         });
     },
     update(uid){
-       this.dialogIsShow = true;
+      this.dialogIsShow = true;
       this.isAdd = false;
       this.editUid = uid;
       //调取菜单查询一条数据
@@ -190,7 +202,7 @@ export default {
                 //清空输入框
                 this.reset();
                 //重新调取接口列表
-                this.getActionUserList();
+                this.getCount();
                 this.$message.success(res.data.msg);
               } else if (res.data.code == 500) {
                 this.$message.warning(res.data.msg);
@@ -210,7 +222,7 @@ export default {
                 //清空输入框
                 this.reset();
                 //重新调取接口列表
-                this.getActionUserList();
+                this.getCount();
                 this.$message.success(res.data.msg);
               } else if (res.data.code == 500) {
                 this.$message.warning(res.data.msg);
@@ -225,8 +237,31 @@ export default {
         }
       });
 
+    },
+    //获取总条目窗口
+    getCount(){
+      getusercount().then(res => {
+        if(res.data.code ==200){
+          this.count = res.data.list[0].total;
+         //如果当前不是第一页并且只有一条数据，我就让页面数量--
+          if(this.pageInfo.page !=1 && this.getStateUserList.length==1){
+              this.pageInfo.page--;
+          }
+          //获取用户接口列表的行动
+          this.$store.dispatch('getActionUserList',this.pageInfo)
+        }
+        //console.log(this.count,'count');
+      })
+    },
+    //当页面发生变化时候，触发
+    getPage(n){ //elementui中的currter-page 回调
+      //n是当前页
+        this.pageInfo.page = n ;
+      //重新调取列表页
+      this.$store.dispatch('getActionUserList',this.pageInfo)
     }
   },
+  
   
   components: {
     breadCrumb

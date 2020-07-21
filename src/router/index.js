@@ -10,13 +10,14 @@ export default new Router({
     {
       path: '/login',
       component: () => import('@/components/pages/login')
-    },{
+     },
+    {
       path: '/index',
       component: () => import('@/components/pages/index'),
       children:[
         {
           path:'/menu',
-          component:() =>import('@/components/views/menu/menu'),
+          component:() =>import('@/pages/menu/menu'),
           meta:{
             name:'菜单管理'
           }
@@ -40,9 +41,15 @@ export default new Router({
           }
          },{
            path:'/spec',
-           component:() => import ('@/components/views/spec'),
+           component:() => import ('@/pages/spec/spec'),
            meta:{
              name:'商品规格'
+           }
+         },{
+           path:'/goods',
+           component:() => import ('@/pages/goods/goods'),
+           meta:{
+             name:'商品管理'
            }
          },{
           path:'/main',
