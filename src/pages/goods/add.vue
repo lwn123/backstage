@@ -1,10 +1,11 @@
 <template>
     <div>
-        <el-dialog
+        <el-dialog width="65%"
             :title="addInfo.isAdd ? '商品添加':'商品编辑'"
             :visible.sync="addInfo.dialogIsShow"
             center
             :before-close="cancel"
+            @open='openEditor'
         >
             <el-form :model="goodsInfo" :rules="rules" ref="goodsInfo">
                 <el-form-item
@@ -13,13 +14,13 @@
                     placeholder="请选择一级分类"
                     prop="first_cateid"
                 >
-                    <el-select v-model="goodsInfo.first_cateid" placeholder="请选择">
+                    <el-select v-model="goodsInfo.first_cateid" placeholder="请选择" @change="cateChange">
                         <el-option
-                            v-for="item in getStateGoodsList"
+                            v-for="item in cateArr"
                             :key="item.id"
-                            :label="item.title"
+                            :label="item.catename"
                             :value="item.id"
-                        >{{item.title}}</el-option>
+                        >{{item.catename}}</el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item
@@ -30,11 +31,11 @@
                 >
                     <el-select v-model="goodsInfo.second_cateid" placeholder="请选择">
                         <el-option
-                            v-for="item in getStateGoodsList"
+                            v-for="item in secondArr"
                             :key="item.id"
-                            :label="item.title"
+                            :label="item.catename"
                             :value="item.id"
-                        >{{item.title}}</el-option>
+                        >{{item.catename}}</el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="商品名称：" :label-width="formLabelWidth" prop="goodsname">
@@ -70,28 +71,27 @@
                     placeholder="请选择商品规格"
                     prop="specsid"
                 >
-                    <el-select v-model="goodsInfo.specsid" placeholder="请选择">
+                    <el-select v-model="goodsInfo.specsid" placeholder="请选择" @change="specChange">
                         <el-option
-                            v-for="item in getStateGoodsList"
+                            v-for="item in  goodsSpecs"
                             :key="item.id"
-                            :label="item.title"
+                            :label="item.specsname"
                             :value="item.id"
-                        >{{item.title}}</el-option>
+                        >{{item.specsname}}</el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item
                     label="规格属性："
                     :label-width="formLabelWidth"
                     placeholder="请选择规格属性"
-                    prop="specsattr"
-                >
-                    <el-select v-model="goodsInfo.specsattr" placeholder="请选择">
+                    prop="specsattr">
+                    <el-select v-model="goodsInfo.specsattr" placeholder="请选择" multiple ref='selectattr'>
                         <el-option
-                            v-for="item in getStateGoodsList"
-                            :key="item.id"
-                            :label="item.title"
-                            :value="item.id"
-                        >{{item.title}}</el-option>
+                            v-for="item in specAttrs"
+                            :key="item"
+                            :label="item"
+                            :value="item"
+                        >{{item}}</el-option>
                     </el-select>
                 </el-form-item>
                 <el-form-item label="是否新品：" :label-width="formLabelWidth" prop="isnew">
@@ -106,6 +106,12 @@
                     <el-radio v-model="goodsInfo.status" label="1">启用</el-radio>
                     <el-radio v-model="goodsInfo.status" label="2">禁用</el-radio>
                 </el-form-item>
+                <el-form-item label="商品描述：" :label-width="formLabelWidth">
+                    <div id="editor" ref="editor">
+
+                    </div>
+                </el-form-item>
+
             </el-form>
             <div slot="footer" class="dialog-footer">
                 <el-button @click="cancel">取 消</el-button>
@@ -117,14 +123,17 @@
 </template>
 
 <script>
+//引入富文本编译器
+import E from 'wangeditor';
 //引入商品接口
-import { getgoodsAdd, getgoodsEdit, getgoodsInfo } from '../../util/axios'
+import { getgoodsAdd, getgoodsEdit, getgoodsInfo,getcateList,getspecList ,getspecInfo} from '../../util/axios'
 //调取辅助性函数
 import { mapActions, mapGetters } from 'vuex'
 export default {
-    props: ['addInfo'],
+    props: ['addInfo','getCount'],
     data() {
         return {
+            editor:null,
             fileList: [], //文件上传列表
             dialogImageUrl: '', //显示图片
             dialogVisible: false, //开启图片的弹框
@@ -144,6 +153,10 @@ export default {
                 ishot: '1', //是1否2热卖推荐
                 status: '1'
             },
+            cateArr:[],//一级分类
+            secondArr:[],//二级分类
+            goodsSpecs:[],//商品规格
+            specAttrs:[],
             rules: {
                 goodsname: [
                     {
@@ -197,11 +210,51 @@ export default {
             }
         }
     },
+    mounted(){
+        //弹框组件加载时候获取一级分类
+        getcateList({pid:0}).then(res => {
+            if(res.data.code == 200){
+                this.cateArr = res.data.list
+            }
+        })
+        getspecList().then(res => {
+            if(res.data.code == 200){
+                this.goodsSpecs = res.data.list
+            }
+        })
+        
+    },
     computed: {
         //计算属性
         ...mapGetters(['getStateGoodsList'])
     },
     methods: {
+        //扒开弹框之前的回调
+        openEditor(){
+            setTimeout(()=>{
+            this.editor = new E('#editor');
+            this.editor.create();
+        },0)
+        },
+        //点击一级分类的时候，联动出二级分类
+        cateChange(e){
+            //e 选中一级时候返回分类编号
+            //console.log(e)
+            getcateList({pid:e}).then(res => {
+            if(res.data.code == 200){
+                this.secondArr = res.data.list
+            }
+        })
+        },
+        //点击商品规格，联动商品属性
+        specChange(id){
+            getspecInfo({id}).then(res => {
+                if(res.data.code ==200){
+                    this.specAttrs=res.data.list? res.data.list[0].attrs:[];
+                }
+            })
+
+        },
         //当文件个数被限制时触发的函数
         handleExceed(files, fileList) {
             this.$message.warning(
@@ -223,11 +276,11 @@ export default {
             console.log(file, '文件地址')
         },
         changeInfo(file) {
-            console.log(file, '修改文件')
+            
             this.imgUrl = file.raw
         },
         //封装一个获取商品列表事件
-        ...mapActions(['getActionMenuList']),
+        ...mapActions(['getActionGoodsList']),
         //关闭弹框事件
         cancel() {
             this.reset()
@@ -235,21 +288,22 @@ export default {
         },
         //重置输入内容
         reset() {
-            ;(this.fileList = []), //上传文件列表
-                (this.goodsInfo = {
-                    first_cateid: '', //一级分类编号
-                    second_cateid: '', //二级分类编号
-                    goodsname: '', //商品名称
-                    price: '', //商品价格
-                    market_price: '', //市场价格
-                    img: '', //商品图片（文件）
-                    description: '', //商品描述
-                    specsid: '', //商品规格编号
-                    specsattr: '', //商品规格属性
-                    isnew: '1', //是1否2新品
-                    ishot: '1', //是1否2热卖推荐
-                    status: '1'
-                })
+            this.fileList = [], //上传文件列表
+            this.goodsInfo = {
+                first_cateid: '', //一级分类编号
+                second_cateid: '', //二级分类编号
+                goodsname: '', //商品名称
+                price: '', //商品价格
+                market_price: '', //市场价格
+                img: '', //商品图片（文件）
+                description: '', //商品描述
+                specsid: '', //商品规格编号
+                specsattr: '', //商品规格属性
+                isnew: '1', //是1否2新品
+                ishot: '1', //是1否2热卖推荐
+                status: '1'
+            },
+            this.$refs.editor.innerHTML ='';
         },
         //点击编辑按钮出现弹框并携带数据
         update(id) {
@@ -258,26 +312,48 @@ export default {
             //调取商品查询一条数据
             getgoodsInfo({ id }).then(res => {
                 if (res.data.code == 200) {
-                    console.log(res)
                     this.goodsInfo = res.data.list
-                    this.goodsInfo.type = this.goodsInfo.type.toString()
                     this.goodsInfo.status = this.goodsInfo.status.toString()
-                }
+                    this.goodsInfo.ishot = this.goodsInfo.isnew.toString()
+                    this.goodsInfo.isnew = this.goodsInfo.isnew.toString()
+                    }
+                    //二级分类
+                    this.cateChange(this.goodsInfo.first_cateid)
+                    //商品规格属性
+                    this.specChange(this.goodsInfo.specsid);
+                    //对规格属性进行拆分
+                   this.goodsInfo.specsattr =this.goodsInfo.specsattr ? this.goodsInfo.specsattr.split(','):[];
+                   //图片
+                   this.fileList = this.goodsInfo.img? [{url:`${this.$imgUrl}${this.goodsInfo.img}`}] :[];
+                   
+                   //文本编译器
+                   this.goodsInfo.description = this.editor.txt.html(this.goodsInfo.description);
+                    
             })
         },
         //确定添加或者更新事件
         subInfo(formName) {
             this.$refs[formName].validate(valid => {
                 if (valid) {
+                    //转化数据数据库中specsattr是字符串
+                    let data = this.goodsInfo;
+                    data.specsattr =  data.specsattr? data.specsattr.join(','):"";
+                    //对编辑器的内容进行转换
+                    data.description = this.editor.txt.html()
+                    let file = new FormData();
+                    for(let i in data){
+                        file.append(i,data[i]);
+                    }
+                    file.append('img',this.imgUrl);
                     //根据isAdd状态去判断执行接口
                     if (this.addInfo.isAdd) {
                         //调取添加接口
-                        getMenuAdd(this.goodsInfo).then(res => {
+                        getgoodsAdd(file).then(res => {
                             if (res.data.code == 200) {
                                 //关闭弹框 清空输入框
                                 this.cancel()
                                 //添加成功重新查询列表
-                                this.getActionMenuList()
+                                this.getCount()
                                 this.$message.success(res.data.msg)
                             } else if (res.data.code == 500) {
                                 this.$message.warning(res.data.msg)
@@ -286,15 +362,17 @@ export default {
                             }
                         })
                     } else {
-                        let data = this.goodsInfo
-                        data.id = this.editId
+                        file.append('id',this.editId);
+                        //如果图片未修改 沿用上次图片地址 如果图片被修改使用新图片地址
+                        this.imgUrl  = this.imgUrl ?this.imgUrl : this.goodsInfo.img;
+                        file.append('img',this.imgUrl);
                         //调取更新接口
-                        getMenuEdit(data).then(res => {
+                        getgoodsEdit(file).then(res => {
                             if (res.data.code == 200) {
                                 //关闭弹框 清空输入框
                                 this.cancel()
                                 //添加成功重新查询列表
-                                this.getActionMenuList()
+                                this.getCount()
                                 this.$message.success(res.data.msg)
                             } else if (res.data.code == 500) {
                                 this.$message.warning(res.data.msg)
@@ -314,4 +392,8 @@ export default {
 </script>
 
 <style  lang="" scoped>
+/* #editor{
+    width: 90%;
+    height: 90%;
+} */
 </style>

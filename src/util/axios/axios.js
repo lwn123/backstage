@@ -6,7 +6,7 @@ import axios from 'axios'
 let http = axios.create({
     // /api是把http://localhost:3000地址重启
     //上线之后可以把基础地址更换成为域名
-  //  baseURL:'/api'
+    baseURL:'/api'
 })
 
 //请求拦截

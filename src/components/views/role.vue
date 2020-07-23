@@ -46,6 +46,7 @@
             ref="tree"
             :props="defaultProps"
             :default-checked-keys="defaultKey"
+            check-strictly
           ></el-tree>
         </el-form-item>
         <el-form-item label="状态：" :label-width="formLabelWidth">
@@ -111,13 +112,14 @@ export default {
   mounted() {
     //触发才调取vuex中的菜单列表
     this.getActionRoleList();
+    this.getActionMenuList();
   },
   computed: {
     ...mapGetters(["getStateRoleList","getStateMenuList"])
   },
   methods: {
     //封装一个获取菜单列表事件
-    ...mapActions(["getActionRoleList"]),
+    ...mapActions(["getActionRoleList",'getActionMenuList']),
     //关闭弹框事件
     cancel() {
       this.reset();
@@ -150,6 +152,7 @@ export default {
         if (res.data.code == 200) {
           //console.log(res);
           this.menuInfo = res.data.list;
+          this.defaultKey = this.menuInfo.menus ? this.menuInfo.menus.split(',') : [];
 
           this.menuInfo.status = this.menuInfo.status.toString();
         }

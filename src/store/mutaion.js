@@ -15,5 +15,17 @@ export default {
     },
     reqSpecsList(state,payload){
         state.speclist = payload
+    },
+    reqGoodsList(state,payload){
+        state.goodsList = payload
+    },
+    reqMemberList(state,payload){
+        state.memberList = payload
+    },
+    reqBannerList(state,payload){
+        state.bannerList = payload
+    },
+    reqSeckList(state,payload){
+        state.seckList = payload
     }
 }

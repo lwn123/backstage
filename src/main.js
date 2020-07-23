@@ -15,7 +15,8 @@ Vue.use(ElementUi);
 //引入 axios
 // import axios from 'axios';
 // Vue.prototype.$http = axios;
-
+//设定一个服务器地址，用于文件上传
+Vue.prototype.$imgUrl = 'http://localhost:3000/';
 
 Vue.config.productionTip = false
 

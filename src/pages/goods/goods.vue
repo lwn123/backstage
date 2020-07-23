@@ -4,9 +4,16 @@
     <bread-Crumb></bread-Crumb>
     <el-button type="primary" size="small" @click="add">添加</el-button>
     <!-- //表格 -->
-    <v-List @edit='edit'></v-List>
+    <v-List @edit='edit' :getCount='getCount'></v-List>
+    <!-- 分页器 -->
+    <el-pagination
+        background
+        layout="prev, pager, next"
+        :page-size="pageInfo.size"
+        :total="count"
+        @current-change="getPage"></el-pagination>
     <!-- 弹框内容 -->
-   <v-Add :addInfo='addInfo' @cancel='cancel' ref="vadd"></v-Add>
+   <v-Add :addInfo='addInfo' @cancel='cancel' ref="vadd" :getCount='getCount'></v-Add>
   </div>
 </template>
 
@@ -15,16 +22,28 @@
 import vList from './list';
 import vAdd from './add';
 import breadCrumb from "@/components/common/breadCrumb";
-
+import {getgoodsCount} from '../../util/axios';
+import {mapGetters} from 'vuex'
 export default {
   data() {
     return {
       addInfo:{
         dialogIsShow: false, //是否出现弹框
         isAdd: true, //添加
-
+      },
+      count: 0, //总条目
+      pageInfo: {
+        //分页数据
+        size: 2, //代表一个页面查询2条数据
+        page: 1 //一共有多少页面
       }
     };
+  },
+  mounted(){
+    this.getCount()
+  },
+  computed:{
+      ...mapGetters(['getStateGoodsList'])
   },
   methods: {
     //点击添加按钮出现弹框
@@ -48,7 +67,32 @@ export default {
       this.addInfo.dialogIsShow = obj.dialogIsShow;
       //通过 ref属性拿到add子组件  上的update方法
       this.$refs.vadd.update(obj.id);
-    }
+    },
+    getCount() {
+            //调取总条数接口
+            getgoodsCount().then(res => {
+                if (res.data.code == 200) {
+                    this.count = res.data.list[0].total
+                    console.log(this.count);
+                    //如果当前不是第一页并且只有一条数据，我就让页面数量--
+                    if (
+                        this.pageInfo.page != 1 &&
+                        this.getStateGoodsList.length == 1
+                    ) {
+                        this.pageInfo.page--
+                    }
+                    //调取获取商品规格接口列表的行动
+                    this.$store.dispatch('getActionGoodsList',this.pageInfo)
+                }
+            })
+        },
+        //当页面发生变化的时候触发该方法
+        getPage(n) {
+            //n是当前页
+            this.pageInfo.page = n
+            //重新调取列表页面
+            this.$store.dispatch('getActionGoodsList', this.pageInfo)
+        }
     
     
    
@@ -65,4 +109,9 @@ export default {
 .el-breadcrumb {
   height: 25px;
 }
+.el-pagination {
+    float: right;
+    margin: 16px 0;
+}
+
 </style>

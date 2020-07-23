@@ -18,5 +18,20 @@ export default {
     //商品规格列表
     getStateSpecList(state){
         return state.speclist
-    }
+    },
+    getStateGoodsList(state){
+       return state.goodsList;
+    },
+    getStatemembersList(state){
+        return state.memberList;
+     },
+    getStatebannersList(state){
+        return state.bannerList;
+     },
+    getStatesecksList(state){
+         return state.seckList;
+      },
+
+     
+
 }
