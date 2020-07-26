@@ -240,6 +240,7 @@ export default {
         cateChange(e){
             //e 选中一级时候返回分类编号
             //console.log(e)
+
             getcateList({pid:e}).then(res => {
             if(res.data.code == 200){
                 this.secondArr = res.data.list
@@ -248,6 +249,7 @@ export default {
         },
         //点击商品规格，联动商品属性
         specChange(id){
+            this.goodsInfo.specsattr='';
             getspecInfo({id}).then(res => {
                 if(res.data.code ==200){
                     this.specAttrs=res.data.list? res.data.list[0].attrs:[];
@@ -257,6 +259,7 @@ export default {
         },
         //当文件个数被限制时触发的函数
         handleExceed(files, fileList) {
+            this.fileList = fileList;
             this.$message.warning(
                 `当前限制选择 1 个文件，本次选择了 ${
                     files.length
@@ -288,6 +291,7 @@ export default {
         },
         //重置输入内容
         reset() {
+            this.imgUrl = '',
             this.fileList = [], //上传文件列表
             this.goodsInfo = {
                 first_cateid: '', //一级分类编号
@@ -312,15 +316,16 @@ export default {
             //调取商品查询一条数据
             getgoodsInfo({ id }).then(res => {
                 if (res.data.code == 200) {
+                    console.log(res.data.list);
                     this.goodsInfo = res.data.list
                     this.goodsInfo.status = this.goodsInfo.status.toString()
                     this.goodsInfo.ishot = this.goodsInfo.isnew.toString()
                     this.goodsInfo.isnew = this.goodsInfo.isnew.toString()
                     }
                     //二级分类
-                    this.cateChange(this.goodsInfo.first_cateid)
+                    //this.cateChange(this.goodsInfo.first_cateid)
                     //商品规格属性
-                    this.specChange(this.goodsInfo.specsid);
+                    //this.specChange(this.goodsInfo.specsid);
                     //对规格属性进行拆分
                    this.goodsInfo.specsattr =this.goodsInfo.specsattr ? this.goodsInfo.specsattr.split(','):[];
                    //图片
@@ -363,8 +368,15 @@ export default {
                         })
                     } else {
                         file.append('id',this.editId);
-                        //如果图片未修改 沿用上次图片地址 如果图片被修改使用新图片地址
+                        console.log(this.fileList);
+                        //如果图片被删除
+                        if(this.imgUrl =='' || this.fileList.length==0){
+                            this.imgUrl=''
+                        }else{
+                            //如果图片未修改 沿用上次图片地址 如果图片被修改使用新图片地址
                         this.imgUrl  = this.imgUrl ?this.imgUrl : this.goodsInfo.img;
+                        }
+                        
                         file.append('img',this.imgUrl);
                         //调取更新接口
                         getgoodsEdit(file).then(res => {

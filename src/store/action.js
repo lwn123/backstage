@@ -79,7 +79,7 @@ export default {
    getActionGoodsList({
     commit
   }, pageInfo) {
-    console.log(pageInfo)
+    
     getgoodsList(pageInfo)
       .then(res => {
         if (res.data.code == 200) {

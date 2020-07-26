@@ -73,7 +73,7 @@ export default {
             getgoodsCount().then(res => {
                 if (res.data.code == 200) {
                     this.count = res.data.list[0].total
-                    console.log(this.count);
+                  
                     //如果当前不是第一页并且只有一条数据，我就让页面数量--
                     if (
                         this.pageInfo.page != 1 &&

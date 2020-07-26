@@ -99,6 +99,9 @@ export default {
     },
     //重置输入内容
     reset() {
+      this.specsArr=[{
+        value:''
+      }]
       this.specsInfo = {
         specsname: "", //商品规格名称
         attrs: '', //商品规格属性值

@@ -51,10 +51,12 @@ export default {
     //点击添加按钮出现弹框
     add() {
       //console.log("出现弹框");
+      this.$refs.vadd.reset();
       //出现弹框
       this.addInfo = {
         dialogIsShow: true, //出现弹框
         isAdd: true //添加事件
+
       };
     },
     //子传父去修改父级的数据
